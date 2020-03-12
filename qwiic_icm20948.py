@@ -302,7 +302,7 @@ class QwiicIcm20948(object):
 	# setBank()
 	#
 	# Sets the bank register of the ICM20948 module
-	def setBank(bank):
+	def setBank(self, bank):
 		""" 
 			Sets the bank register of the ICM20948 module
 
