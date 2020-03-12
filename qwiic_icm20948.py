@@ -417,7 +417,7 @@ class QwiicIcm20948(object):
 
 		"""
 		# check for valid sensor ID from user of this function
-		if (!(sensors & (ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr | ICM_20948_Internal_Mst))):
+		if ((sensors & (ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr | ICM_20948_Internal_Mst)) == False):
 			print("Invalid Sensor ID")
 			return False
 
