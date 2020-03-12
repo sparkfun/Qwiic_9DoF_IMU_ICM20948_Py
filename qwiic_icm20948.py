@@ -311,9 +311,107 @@ class QwiicIcm20948(object):
 
 		"""
 		# are we who we need to be?
+		setBank(0)
 		chipID = self._i2c.readByte(self.address, self.AGB0_REG_WHO_AM_I)
 		if not chipID in _validChipIDs:
 			print("Invalid Chip ID: 0x%.2X" % chipID)
 			return False
 		
 		return True
+	
+
+	def setBank(bank):
+		""" 
+			Sets the bank register of the ICM20948 module
+
+			:return: Returns true if the bank was a valid value and it was set, otherwise False.
+			:rtype: bool
+
+		"""
+		if bank > 3:	# Only 4 possible banks
+			print("Invalid Bank value: %d" % bank)
+			return False			   
+		bank = ((bank << 4) & 0x30) # bits 5:4 of REG_BANK_SEL
+		#return ICM_20948_execute_w(pdev, REG_BANK_SEL, &bank, 1)
+		return self._i2c.writeByte(self.address, self.REG_BANK_SEL, bank)
+
+	# def startupDefault(self)
+	# 	ICM_20948_Status_e retval = ICM_20948_Stat_Ok;
+
+	# 	retval = checkID();
+	# 	if (retval != ICM_20948_Stat_Ok)
+	# 	{
+	# 		status = retval;
+	# 		return status;
+	# 	}
+
+	# 	retval = swReset();
+	# 	if (retval != ICM_20948_Stat_Ok)
+	# 	{
+	# 		status = retval;
+	# 		return status;
+	# 	}
+	# 	delay(50);
+
+	# 	retval = sleep(false);
+	# 	if (retval != ICM_20948_Stat_Ok)
+	# 	{
+	# 		status = retval;
+	# 		return status;
+	# 	}
+
+	# 	retval = lowPower(false);
+	# 	if (retval != ICM_20948_Stat_Ok)
+	# 	{
+	# 		status = retval;
+	# 		return status;
+	# 	}
+
+	# 	retval = setSampleMode((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), ICM_20948_Sample_Mode_Continuous); // options: ICM_20948_Sample_Mode_Continuous or ICM_20948_Sample_Mode_Cycled
+	# 	if (retval != ICM_20948_Stat_Ok)
+	# 	{
+	# 		status = retval;
+	# 		return status;
+	# 	} // sensors: 	ICM_20948_Internal_Acc, ICM_20948_Internal_Gyr, ICM_20948_Internal_Mst
+
+	# 	ICM_20948_fss_t FSS;
+	# 	FSS.a = gpm2;   // (ICM_20948_ACCEL_CONFIG_FS_SEL_e)
+	# 	FSS.g = dps250; // (ICM_20948_GYRO_CONFIG_1_FS_SEL_e)
+	# 	retval = setFullScale((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), FSS);
+	# 	if (retval != ICM_20948_Stat_Ok)
+	# 	{
+	# 		status = retval;
+	# 		return status;
+	# 	}
+
+	# 	ICM_20948_dlpcfg_t dlpcfg;
+	# 	dlpcfg.a = acc_d473bw_n499bw;
+	# 	dlpcfg.g = gyr_d361bw4_n376bw5;
+	# 	retval = setDLPFcfg((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), dlpcfg);
+	# 	if (retval != ICM_20948_Stat_Ok)
+	# 	{
+	# 		status = retval;
+	# 		return status;
+	# 	}
+
+	# 	retval = enableDLPF(ICM_20948_Internal_Acc, false);
+	# 	if (retval != ICM_20948_Stat_Ok)
+	# 	{
+	# 		status = retval;
+	# 		return status;
+	# 	}
+	# 	retval = enableDLPF(ICM_20948_Internal_Gyr, false);
+	# 	if (retval != ICM_20948_Stat_Ok)
+	# 	{
+	# 		status = retval;
+	# 		return status;
+	# 	}
+	# 	retval = startupMagnetometer();
+	# 	if (retval != ICM_20948_Stat_Ok)
+	# 	{
+	# 		status = retval;
+	# 		return status;
+	# 	}
+
+	# 	return status;
+	# }
