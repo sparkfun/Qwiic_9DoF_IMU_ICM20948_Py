@@ -70,6 +70,17 @@ _AVAILABLE_I2C_ADDRESS = [0x69, 0x68]
 # define our valid chip IDs
 _validChipIDs = [0xEA]
 
+# Internal Sensor IDs, used in various functions as arguments to know who to affect
+ICM_20948_Internal_Acc = (1 << 0)
+ICM_20948_Internal_Gyr = (1 << 1)
+ICM_20948_Internal_Mag = (1 << 2)
+ICM_20948_Internal_Tmp = (1 << 3)
+ICM_20948_Internal_Mst = (1 << 4) # I2C Master Ineternal
+
+# Sample mode options
+ICM_20948_Sample_Mode_Continuous = 0x00
+ICM_20948_Sample_Mode_Cycled = 0x01
+
 # define the class that encapsulates the device being created. All information associated with this
 # device is encapsulated by this class. The device class should be the only value exported 
 # from this module.
@@ -342,6 +353,104 @@ class QwiicIcm20948(object):
 		return self._i2c.writeByte(self.address, self.AGB0_REG_PWR_MGMT_1, register)		
 
 	# ----------------------------------
+	# sleep()
+	#
+	# Sets the ICM20948 module in or out of sleep mode
+	def sleep(self, on):
+		""" 
+			Sets the ICM20948 module in or out of sleep mode
+
+			:return: Returns true if the sleep setting write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		# Read the Power Management Register, store in local variable "register"
+		self.setBank(0)
+		register = self._i2c.readByte(self.address, self.AGB0_REG_PWR_MGMT_1)
+
+		# Set/clear the sleep bit [6] as needed
+		if on:
+			register |= (1<<6) # set bit
+		else:
+			register &= ~(1<<6) # clear bit
+
+		# Write register
+		self.setBank(0)
+		return self._i2c.writeByte(self.address, self.AGB0_REG_PWR_MGMT_1, register)			
+
+	# ----------------------------------
+	# lowPower()
+	#
+	# Sets the ICM20948 module in or out of low power mode
+	def lowPower(self, on):
+		""" 
+			Sets the ICM20948 module in or out of low power mode
+
+			:return: Returns true if the power mode setting write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		# Read the Power Management Register, store in local variable "register"
+		self.setBank(0)
+		register = self._i2c.readByte(self.address, self.AGB0_REG_PWR_MGMT_1)
+
+		# Set/clear the low power mode bit [5] as needed
+		if on:
+			register |= (1<<5) # set bit
+		else:
+			register &= ~(1<<5) # clear bit
+
+		# Write register
+		self.setBank(0)
+		return self._i2c.writeByte(self.address, self.AGB0_REG_PWR_MGMT_1, register)	
+
+	# ----------------------------------
+	# setSampleMode()
+	#
+	# Sets the sample mode of the ICM90248 module
+	def setSampleMode(self, sensors, mode):
+		""" 
+			Sets the sample mode of the ICM90248 module
+
+			:return: Returns true if the sample mode setting write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		# check for valid sensor ID from user of this function
+		if (!(sensors & (ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr | ICM_20948_Internal_Mst))):
+			print("Invalid Sensor ID")
+			return False
+
+		# Read the LP CONFIG Register, store in local variable "register"
+		self.setBank(0)
+		register = self._i2c.readByte(self.address, self.AGB0_REG_LP_CONFIG)
+
+		if (sensors & ICM_20948_Internal_Acc):
+			# Set/clear the sensor specific sample mode bit as needed
+			if mode == ICM_20948_Sample_Mode_Cycled:
+				register |= (1<<5) # set bit
+			elif mode == ICM_20948_Sample_Mode_Continuous:
+				register &= ~(1<<5) # clear bit
+
+		if (sensors & ICM_20948_Internal_Gyr):
+			# Set/clear the sensor specific sample mode bit as needed
+			if mode == ICM_20948_Sample_Mode_Cycled:
+				register |= (1<<4) # set bit
+			elif mode == ICM_20948_Sample_Mode_Continuous:
+				register &= ~(1<<4) # clear bit
+
+		if (sensors & ICM_20948_Internal_Mst):
+			# Set/clear the sensor specific sample mode bit as needed
+			if mode == ICM_20948_Sample_Mode_Cycled:
+				register |= (1<<6) # set bit
+			elif mode == ICM_20948_Sample_Mode_Continuous:
+				register &= ~(1<<6) # clear bit
+
+		# Write register
+		self.setBank(0)
+		return self._i2c.writeByte(self.address, self.AGB0_REG_LP_CONFIG, register)		
+
+	# ----------------------------------
 	# begin()
 	#
 	# Initialize the system/validate the board. 
@@ -364,32 +473,20 @@ class QwiicIcm20948(object):
 		self.swReset()
 		time.sleep(.05)
 
+		# set sleep mode off
+		self.sleep(False)
+
+		# set lower power mode off
+		self.lowPower(False)
+
+		# set sample mode to continuous for both accel and gyro
+		self.setSampleMode((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), ICM_20948_Sample_Mode_Continuous)
+
 		return True
 	
 
 	# def startupDefault(self)
 	# 	ICM_20948_Status_e retval = ICM_20948_Stat_Ok;
-
-	# 	retval = sleep(false);
-	# 	if (retval != ICM_20948_Stat_Ok)
-	# 	{
-	# 		status = retval;
-	# 		return status;
-	# 	}
-
-	# 	retval = lowPower(false);
-	# 	if (retval != ICM_20948_Stat_Ok)
-	# 	{
-	# 		status = retval;
-	# 		return status;
-	# 	}
-
-	# 	retval = setSampleMode((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), ICM_20948_Sample_Mode_Continuous); // options: ICM_20948_Sample_Mode_Continuous or ICM_20948_Sample_Mode_Cycled
-	# 	if (retval != ICM_20948_Stat_Ok)
-	# 	{
-	# 		status = retval;
-	# 		return status;
-	# 	} // sensors: 	ICM_20948_Internal_Acc, ICM_20948_Internal_Gyr, ICM_20948_Internal_Mst
 
 	# 	ICM_20948_fss_t FSS;
 	# 	FSS.a = gpm2;   // (ICM_20948_ACCEL_CONFIG_FS_SEL_e)
