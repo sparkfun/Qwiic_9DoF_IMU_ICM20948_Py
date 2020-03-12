@@ -296,7 +296,7 @@ class QwiicIcm20948(object):
 		"""
 		return qwiic_i2c.isDeviceConnected(self.address)
 
-	connected = property(is_connected)
+	connected = property(isConnected)
 
 	# ----------------------------------
 	# begin()
