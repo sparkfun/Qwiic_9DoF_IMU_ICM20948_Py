@@ -318,6 +318,29 @@ class QwiicIcm20948(object):
 		return self._i2c.writeByte(self.address, self.REG_BANK_SEL, bank)
 
 	# ----------------------------------
+	# swReset()
+	#
+	# Performs a software reset on the ICM20948 module
+	def swReset(self):
+		""" 
+			Performs a software reset on the ICM20948 module
+
+			:return: Returns true if the software reset was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		# Read the Power Management Register, store in local variable "register"
+		self.setBank(0)
+		register = self._i2c.readByte(self.address, self.AGB0_REG_PWR_MGMT_1)
+
+		# Set the device reset bit [7]
+		register |= (1<<7)
+
+		# Write register
+		self.setBank(0)
+		return self._i2c.writeByte(self.address, self.AGB0_REG_PWR_MGMT_1, register)		
+
+	# ----------------------------------
 	# begin()
 	#
 	# Initialize the system/validate the board. 
@@ -336,26 +359,15 @@ class QwiicIcm20948(object):
 			print("Invalid Chip ID: 0x%.2X" % chipID)
 			return False
 		
+		# software reset
+		self.swReset()
+		time.sleep(.05)
+
 		return True
 	
 
 	# def startupDefault(self)
 	# 	ICM_20948_Status_e retval = ICM_20948_Stat_Ok;
-
-	# 	retval = checkID();
-	# 	if (retval != ICM_20948_Stat_Ok)
-	# 	{
-	# 		status = retval;
-	# 		return status;
-	# 	}
-
-	# 	retval = swReset();
-	# 	if (retval != ICM_20948_Stat_Ok)
-	# 	{
-	# 		status = retval;
-	# 		return status;
-	# 	}
-	# 	delay(50);
 
 	# 	retval = sleep(false);
 	# 	if (retval != ICM_20948_Stat_Ok)
