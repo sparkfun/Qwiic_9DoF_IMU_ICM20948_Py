@@ -299,27 +299,9 @@ class QwiicIcm20948(object):
 	connected = property(isConnected)
 
 	# ----------------------------------
-	# begin()
+	# setBank()
 	#
-	# Initialize the system/validate the board. 
-	def begin(self):
-		""" 
-			Initialize the operation of the ICM20948 module
-
-			:return: Returns true of the initializtion was successful, otherwise False.
-			:rtype: bool
-
-		"""
-		# are we who we need to be?
-		setBank(0)
-		chipID = self._i2c.readByte(self.address, self.AGB0_REG_WHO_AM_I)
-		if not chipID in _validChipIDs:
-			print("Invalid Chip ID: 0x%.2X" % chipID)
-			return False
-		
-		return True
-	
-
+	# Sets the bank register of the ICM20948 module
 	def setBank(bank):
 		""" 
 			Sets the bank register of the ICM20948 module
@@ -334,6 +316,28 @@ class QwiicIcm20948(object):
 		bank = ((bank << 4) & 0x30) # bits 5:4 of REG_BANK_SEL
 		#return ICM_20948_execute_w(pdev, REG_BANK_SEL, &bank, 1)
 		return self._i2c.writeByte(self.address, self.REG_BANK_SEL, bank)
+
+	# ----------------------------------
+	# begin()
+	#
+	# Initialize the system/validate the board. 
+	def begin(self):
+		""" 
+			Initialize the operation of the ICM20948 module
+
+			:return: Returns true of the initializtion was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		# are we who we need to be?
+		self.setBank(0)
+		chipID = self._i2c.readByte(self.address, self.AGB0_REG_WHO_AM_I)
+		if not chipID in _validChipIDs:
+			print("Invalid Chip ID: 0x%.2X" % chipID)
+			return False
+		
+		return True
+	
 
 	# def startupDefault(self)
 	# 	ICM_20948_Status_e retval = ICM_20948_Stat_Ok;
