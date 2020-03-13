@@ -93,6 +93,28 @@ dps500 = 0x01
 dps1000 = 0x02
 dps2000 = 0x03
 
+# Accelerometer low pass filter configuration options
+# Format is dAbwB_nXbwZ - A is integer part of 3db BW, B is fraction. X is integer part of nyquist bandwidth, Y is fraction
+acc_d246bw_n265bw = 0x00
+acc_d246bw_n265bw_1 = 0x01
+acc_d111bw4_n136bw = 0x02
+acc_d50bw4_n68bw8 = 0x03
+acc_d23bw9_n34bw4 = 0x04
+acc_d11bw5_n17bw = 0x05
+acc_d5bw7_n8bw3 = 0x06
+acc_d473bw_n499bw = 0x07
+
+# Gryo low pass filter configuration options
+# Format is dAbwB_nXbwZ - A is integer part of 3db BW, B is fraction. X is integer part of nyquist bandwidth, Y is fraction
+gyr_d196bw6_n229bw8 = 0x00
+gyr_d151bw8_n187bw6 = 0x01
+gyr_d119bw5_n154bw3 = 0x02
+gyr_d51bw2_n73bw3 = 0x03
+gyr_d23bw9_n35bw9 = 0x04
+gyr_d11bw6_n17bw8 = 0x05
+gyr_d5bw7_n8bw9 = 0x06
+gyr_d361bw4_n376bw5 = 0x07
+
 # define the class that encapsulates the device being created. All information associated with this
 # device is encapsulated by this class. The device class should be the only value exported 
 # from this module.
@@ -511,6 +533,29 @@ class QwiicIcm20948(object):
 		return self._i2c.writeByte(self.address, self.AGB2_REG_GYRO_CONFIG_1, register)			
 
 	# ----------------------------------
+	# setDLPFcfgAccel()
+	#
+	# Sets the digital low pass filter for the accel in the ICM20948 module
+	def setDLPFcfgAccel(self, dlpcfg):
+		""" 
+			Sets the digital low pass filter for the accel in the ICM20948 module
+
+			:return: Returns true if the dlp setting write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		# Read the Accel Config Register, store in local variable "register"
+		self.setBank(2)
+		register = self._i2c.readByte(self.address, self.AGB2_REG_ACCEL_CONFIG_1)
+
+		register &= ~(0b00000110) # clear bits 2:1 (0b0000.0XX0)
+
+		register |= (mode << 1) # place mode select into bits 2:1 of AGB2_REG_ACCEL_CONFIG			
+
+		# Write register
+		self.setBank(2)
+		return self._i2c.writeByte(self.address, self.AGB2_REG_ACCEL_CONFIG_1, register)	
+	# ----------------------------------
 	# begin()
 	#
 	# Initialize the system/validate the board. 
@@ -545,6 +590,12 @@ class QwiicIcm20948(object):
 		# set full scale range for both accel and gryo (separate functions)
 		self.setFullScaleRangeAccel(gpm2)
 		self.setFullScaleRangeGyro(dps250)
+
+		# set low pass filter for both accet and gyro (separate functions)
+		self.setDLPFcfgAccel(acc_d473bw_n499bw)
+		self.setDLPFcfgGyro(gyr_d361bw4_n376bw5)
+
+
 
 		return True
 	
