@@ -81,6 +81,18 @@ ICM_20948_Internal_Mst = (1 << 4) # I2C Master Ineternal
 ICM_20948_Sample_Mode_Continuous = 0x00
 ICM_20948_Sample_Mode_Cycled = 0x01
 
+# Accel full scale range options [AGB2_REG_ACCEL_CONFIG]
+gpm2 = 0x00 # G forces Plus or Minus (aka "gpm")
+gpm4 = 0x01
+gpm8 = 0x02
+gpm16 = 0x03
+
+# Gyro full scale range options [AGB2_REG_GYRO_CONFIG_1]
+dps250 = 0x00 #degrees per second (aka "dps")
+dps500 = 0x01
+dps1000 = 0x02
+dps2000 = 0x03
+
 # define the class that encapsulates the device being created. All information associated with this
 # device is encapsulated by this class. The device class should be the only value exported 
 # from this module.
@@ -223,7 +235,7 @@ class QwiicIcm20948(object):
 	AGB2_REG_ACCEL_SMPLRT_DIV_2 = 0x11
 	AGB2_REG_ACCEL_INTEL_CTRL = 0x12
 	AGB2_REG_ACCEL_WOM_THR = 0x13
-	AGB2_REG_ACCEL_CONFIG = 0x14
+	AGB2_REG_ACCEL_CONFIG_1 = 0x14
 	AGB2_REG_ACCEL_CONFIG_2 = 0x15
 		 # Break
 	AGB2_REG_FSYNC_CONFIG = 0x52 
@@ -451,6 +463,54 @@ class QwiicIcm20948(object):
 		return self._i2c.writeByte(self.address, self.AGB0_REG_LP_CONFIG, register)		
 
 	# ----------------------------------
+	# setFullScaleRangeAccel()
+	#
+	# Sets the full scale range for the accel in the ICM20948 module
+	def setFullScaleRangeAccel(self, mode):
+		""" 
+			Sets the full scale range for the accel in the ICM20948 module
+
+			:return: Returns true if the full scale range setting write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		# Read the Accel Config Register, store in local variable "register"
+		self.setBank(2)
+		register = self._i2c.readByte(self.address, self.AGB2_REG_ACCEL_CONFIG_1)
+
+		register &= ~(0b00000110) # clear bits 2:1 (0b0000.0XX0)
+
+		register |= (mode << 1) # place mode select into bits 2:1 of AGB2_REG_ACCEL_CONFIG			
+
+		# Write register
+		self.setBank(2)
+		return self._i2c.writeByte(self.address, self.AGB2_REG_ACCEL_CONFIG_1, register)	
+
+	# ----------------------------------
+	# setFullScaleRangeGyro()
+	#
+	# Sets the full scale range for the gyro in the ICM20948 module
+	def setFullScaleRangeGyro(self, mode):
+		""" 
+			Sets the full scale range for the gyro in the ICM20948 module
+
+			:return: Returns true if the full scale range setting write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		# Read the Gyro Config Register, store in local variable "register"
+		self.setBank(2)
+		register = self._i2c.readByte(self.address, self.AGB2_REG_GYRO_CONFIG_1)
+
+		register &= ~(0b00000110) # clear bits 2:1 (0b0000.0XX0)
+
+		register |= (mode << 1) # place mode select into bits 2:1 of AGB2_REG_GYRO_CONFIG_1			
+
+		# Write register
+		self.setBank(2)
+		return self._i2c.writeByte(self.address, self.AGB2_REG_GYRO_CONFIG_1, register)			
+
+	# ----------------------------------
 	# begin()
 	#
 	# Initialize the system/validate the board. 
@@ -482,21 +542,15 @@ class QwiicIcm20948(object):
 		# set sample mode to continuous for both accel and gyro
 		self.setSampleMode((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), ICM_20948_Sample_Mode_Continuous)
 
+		# set full scale range for both accel and gryo (separate functions)
+		self.setFullScaleRangeAccel(gpm2)
+		self.setFullScaleRangeGyro(dps250)
+
 		return True
 	
 
 	# def startupDefault(self)
 	# 	ICM_20948_Status_e retval = ICM_20948_Stat_Ok;
-
-	# 	ICM_20948_fss_t FSS;
-	# 	FSS.a = gpm2;   // (ICM_20948_ACCEL_CONFIG_FS_SEL_e)
-	# 	FSS.g = dps250; // (ICM_20948_GYRO_CONFIG_1_FS_SEL_e)
-	# 	retval = setFullScale((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), FSS);
-	# 	if (retval != ICM_20948_Stat_Ok)
-	# 	{
-	# 		status = retval;
-	# 		return status;
-	# 	}
 
 	# 	ICM_20948_dlpcfg_t dlpcfg;
 	# 	dlpcfg.a = acc_d473bw_n499bw;
