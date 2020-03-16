@@ -581,6 +581,60 @@ class QwiicIcm20948(object):
 		return self._i2c.writeByte(self.address, self.AGB2_REG_GYRO_CONFIG_1, register)
 
 	# ----------------------------------
+	# enableDlpfAccel()
+	#
+	# Enables or disables the accelerometer DLPF of the ICM90248 module
+	def enableDlpfAccel(self, on):
+		""" 
+			Enables or disables the accelerometer DLPF of the ICM90248 module
+
+			:return: Returns true if the DLPF mode setting write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+
+		# Read the AGB2_REG_ACCEL_CONFIG, store in local variable "register"
+		self.setBank(2)
+		register = self._i2c.readByte(self.address, self.AGB2_REG_ACCEL_CONFIG)
+
+		# Set/clear the ACCEL_FCHOICE bit [0] as needed
+		if on:
+			register |= (1<<0) # set bit
+		else:
+			register &= ~(1<<0) # clear bit
+
+		# Write register
+		self.setBank(2)
+		return self._i2c.writeByte(self.address, self.AGB2_REG_ACCEL_CONFIG, register)	
+
+	# ----------------------------------
+	# enableDlpfGyro()
+	#
+	# Enables or disables the Gyro DLPF of the ICM90248 module
+	def enableDlpfGyro(self, on):
+		""" 
+			Enables or disables the Gyro DLPF of the ICM90248 module
+
+			:return: Returns true if the DLPF mode setting write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+
+		# Read the AGB2_REG_GYRO_CONFIG_1, store in local variable "register"
+		self.setBank(2)
+		register = self._i2c.readByte(self.address, self.AGB2_REG_GYRO_CONFIG_1)
+
+		# Set/clear the GYRO_FCHOICE bit [0] as needed
+		if on:
+			register |= (1<<0) # set bit
+		else:
+			register &= ~(1<<0) # clear bit
+
+		# Write register
+		self.setBank(2)
+		return self._i2c.writeByte(self.address, self.AGB2_REG_GYRO_CONFIG_1, register)			
+
+	# ----------------------------------
 	# begin()
 	#
 	# Initialize the system/validate the board. 
@@ -620,6 +674,10 @@ class QwiicIcm20948(object):
 		self.setDLPFcfgAccel(acc_d473bw_n499bw)
 		self.setDLPFcfgGyro(gyr_d361bw4_n376bw5)
 
+		# disable digital low pass filters on both accel and gyro
+		self.enableDlpfAccel(False)
+		self.enableDlpfGyro(False)
+
 
 
 		return True
@@ -628,28 +686,6 @@ class QwiicIcm20948(object):
 	# def startupDefault(self)
 	# 	ICM_20948_Status_e retval = ICM_20948_Stat_Ok;
 
-	# 	ICM_20948_dlpcfg_t dlpcfg;
-	# 	dlpcfg.a = acc_d473bw_n499bw;
-	# 	dlpcfg.g = gyr_d361bw4_n376bw5;
-	# 	retval = setDLPFcfg((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), dlpcfg);
-	# 	if (retval != ICM_20948_Stat_Ok)
-	# 	{
-	# 		status = retval;
-	# 		return status;
-	# 	}
-
-	# 	retval = enableDLPF(ICM_20948_Internal_Acc, false);
-	# 	if (retval != ICM_20948_Stat_Ok)
-	# 	{
-	# 		status = retval;
-	# 		return status;
-	# 	}
-	# 	retval = enableDLPF(ICM_20948_Internal_Gyr, false);
-	# 	if (retval != ICM_20948_Stat_Ok)
-	# 	{
-	# 		status = retval;
-	# 		return status;
-	# 	}
 	# 	retval = startupMagnetometer();
 	# 	if (retval != ICM_20948_Stat_Ok)
 	# 	{
