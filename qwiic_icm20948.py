@@ -635,6 +635,29 @@ class QwiicIcm20948(object):
 		return self._i2c.writeByte(self.address, self.AGB2_REG_GYRO_CONFIG_1, register)			
 
 	# ----------------------------------
+	# dataReady()
+	#
+	# Returns status of RAW_DATA_0_RDY_INT the ICM90248 module
+	def dataReady(self):
+		""" 
+			Returns status of RAW_DATA_0_RDY_INT the ICM90248 module
+
+			:return: Returns true if raw data is ready, otherwise False.
+			:rtype: bool
+
+		"""
+
+		# Read the AGB0_REG_INT_STATUS_1, store in local variable "register"
+		self.setBank(0)
+		register = self._i2c.readByte(self.address, self.AGB0_REG_INT_STATUS_1)
+
+		# check bit [0]
+		if (register & (1<<0)):
+			return True
+		else:
+			return False
+
+	# ----------------------------------
 	# begin()
 	#
 	# Initialize the system/validate the board. 

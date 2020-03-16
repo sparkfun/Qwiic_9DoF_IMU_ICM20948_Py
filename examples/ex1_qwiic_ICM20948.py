@@ -61,6 +61,15 @@ def runExample():
 		
 		time.sleep(1)
 
+		if mySensor.dataReady():
+    		print("data ready...")
+			#mySensor.getAGMT();                # The values are only updated when you call 'getAGMT'
+    		#printRawAGMT( mySensor.agmt );     # Uncomment this to see the raw values, taken directly from the agmt structure
+    		#printScaledAGMT( mySensor.agmt);   # This function takes into account the sclae settings from when the measurement was made to calculate the values with units
+    		time.sleep(0.03)
+		else:
+    		print("Waiting for data")
+    		time.sleep(0.5)
 
 if __name__ == '__main__':
 	try:
