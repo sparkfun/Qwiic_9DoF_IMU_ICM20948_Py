@@ -548,13 +548,38 @@ class QwiicIcm20948(object):
 		self.setBank(2)
 		register = self._i2c.readByte(self.address, self.AGB2_REG_ACCEL_CONFIG_1)
 
-		register &= ~(0b00000110) # clear bits 2:1 (0b0000.0XX0)
+		register &= ~(0b00111000) # clear bits 5:3 (0b00XX.X000)
 
-		register |= (mode << 1) # place mode select into bits 2:1 of AGB2_REG_ACCEL_CONFIG			
+		register |= (dlpcfg << 3) # place dlpcfg select into bits 5:3 of AGB2_REG_ACCEL_CONFIG_1			
 
 		# Write register
 		self.setBank(2)
 		return self._i2c.writeByte(self.address, self.AGB2_REG_ACCEL_CONFIG_1, register)	
+
+	# ----------------------------------
+	# setDLPFcfgGyro()
+	#
+	# Sets the digital low pass filter for the gyro in the ICM20948 module
+	def setDLPFcfgGyro(self, dlpcfg):
+		""" 
+			Sets the digital low pass filter for the gyro in the ICM20948 module
+
+			:return: Returns true if the dlp setting write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		# Read the gyro Config Register, store in local variable "register"
+		self.setBank(2)
+		register = self._i2c.readByte(self.address, self.AGB2_REG_GYRO_CONFIG_1)
+
+		register &= ~(0b00111000) # clear bits 5:3 (0b00XX.X000)
+
+		register |= (dlpcfg << 3) # place dlpcfg select into bits 5:3 of AGB2_REG_GYRO_CONFIG_1			
+
+		# Write register
+		self.setBank(2)
+		return self._i2c.writeByte(self.address, self.AGB2_REG_GYRO_CONFIG_1, register)
+
 	# ----------------------------------
 	# begin()
 	#
@@ -591,7 +616,7 @@ class QwiicIcm20948(object):
 		self.setFullScaleRangeAccel(gpm2)
 		self.setFullScaleRangeGyro(dps250)
 
-		# set low pass filter for both accet and gyro (separate functions)
+		# set low pass filter for both accel and gyro (separate functions)
 		self.setDLPFcfgAccel(acc_d473bw_n499bw)
 		self.setDLPFcfgGyro(gyr_d361bw4_n376bw5)
 
