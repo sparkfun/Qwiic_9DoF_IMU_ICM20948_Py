@@ -658,6 +658,47 @@ class QwiicIcm20948(object):
 			return False
 
 	# ----------------------------------
+	# getAgmt()
+	#
+	# Returns a tuple of raw values from accel, gyro, mag and temp of the ICM90248 module
+	def getAgmt(self):
+		""" 
+			Returns a tuple of raw values from accel, gyro, mag and temp of the ICM90248 module
+
+			:return: Returns tuple of accel x/y/z, gryo x/y/z, mag x/y/z, and temp, otherwise False.
+			:rtype: bool
+
+		"""
+
+		# Read all of the readings starting at AGB0_REG_ACCEL_XOUT_H
+		numbytes = 14 + 9 # Read Accel, gyro, temp, and 9 bytes of mag
+		self.setBank(0)
+		buff = self._i2c.readBlock(self.address, self.AGB0_REG_ACCEL_XOUT_H, numbytes)
+
+		ax = ((buff[0] << 8) | (buff[1] & 0xFF))
+		ay = ((buff[2] << 8) | (buff[3] & 0xFF))
+		az = ((buff[4] << 8) | (buff[5] & 0xFF))
+
+		gx = ((buff[6] << 8) | (buff[7] & 0xFF))
+		gy = ((buff[8] << 8) | (buff[9] & 0xFF))
+		gz = ((buff[10] << 8) | (buff[11] & 0xFF))
+
+		tmp = ((buff[12] << 8) | (buff[13] & 0xFF))
+
+		magStat1 = buff[14]
+		mx = ((buff[16] << 8) | (buff[15] & 0xFF)) # Mag data is read little endian
+		my = ((buff[18] << 8) | (buff[17] & 0xFF))
+		mz = ((buff[20] << 8) | (buff[19] & 0xFF))
+		magStat2 = buff[22]
+
+		# check for data read error
+		if buff:
+			return ax, ay, az, gx, gy, gz, mx, my, mz, tmp, magStat1, magStat2
+		else:
+			return False
+
+
+	# ----------------------------------
 	# begin()
 	#
 	# Initialize the system/validate the board. 

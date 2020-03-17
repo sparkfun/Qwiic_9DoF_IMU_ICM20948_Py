@@ -62,8 +62,9 @@ def runExample():
 		time.sleep(1)
 
 		if mySensor.dataReady():
-    		print("data ready...")
-			#mySensor.getAGMT();                # The values are only updated when you call 'getAGMT'
+    		#print("data ready...")
+			ax, ay, az, gx, gy, gz, mx, my, mz, tmp, magStat1, magStat2 = mySensor.getAgmt()
+			print(ax, ay, az, gx, gy, gz, mx, my, mz, tmp, magStat1, magStat2)
     		#printRawAGMT( mySensor.agmt );     # Uncomment this to see the raw values, taken directly from the agmt structure
     		#printScaledAGMT( mySensor.agmt);   # This function takes into account the sclae settings from when the measurement was made to calculate the values with units
     		time.sleep(0.03)
