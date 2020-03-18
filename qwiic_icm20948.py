@@ -593,9 +593,9 @@ class QwiicIcm20948(object):
 
 		"""
 
-		# Read the AGB2_REG_ACCEL_CONFIG, store in local variable "register"
+		# Read the AGB2_REG_ACCEL_CONFIG_1, store in local variable "register"
 		self.setBank(2)
-		register = self._i2c.readByte(self.address, self.AGB2_REG_ACCEL_CONFIG)
+		register = self._i2c.readByte(self.address, self.AGB2_REG_ACCEL_CONFIG_1)
 
 		# Set/clear the ACCEL_FCHOICE bit [0] as needed
 		if on:
@@ -605,7 +605,7 @@ class QwiicIcm20948(object):
 
 		# Write register
 		self.setBank(2)
-		return self._i2c.writeByte(self.address, self.AGB2_REG_ACCEL_CONFIG, register)	
+		return self._i2c.writeByte(self.address, self.AGB2_REG_ACCEL_CONFIG_1, register)	
 
 	# ----------------------------------
 	# enableDlpfGyro()

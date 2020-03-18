@@ -67,10 +67,10 @@ def runExample():
 			print(ax, ay, az, gx, gy, gz, mx, my, mz, tmp, magStat1, magStat2)
     		#printRawAGMT( mySensor.agmt );     # Uncomment this to see the raw values, taken directly from the agmt structure
     		#printScaledAGMT( mySensor.agmt);   # This function takes into account the sclae settings from when the measurement was made to calculate the values with units
-    		time.sleep(0.03)
+			time.sleep(0.03)
 		else:
-    		print("Waiting for data")
-    		time.sleep(0.5)
+			print("Waiting for data")
+			time.sleep(0.5)
 
 if __name__ == '__main__':
 	try:
