@@ -669,8 +669,8 @@ class QwiicIcm20948(object):
 			:rtype: int
 
 		"""
-        if input > 32767:
-            input -= 65536
+		if input > 32767:
+			input -= 65536
 		return input
 
 	# ----------------------------------
@@ -709,7 +709,17 @@ class QwiicIcm20948(object):
 
 		# Convert all values to signed (because python treats all ints as 32 bit ints 
 		# and does not see the MSB as the sign of our 16 bit int raw value)
-		self.axRaw = ToSignedInt(self.axRaw)
+		self.axRaw = self.ToSignedInt(self.axRaw)
+		self.ayRaw = self.ToSignedInt(self.ayRaw)
+		self.azRaw = self.ToSignedInt(self.azRaw)
+
+		self.gxRaw = self.ToSignedInt(self.gxRaw)
+		self.gyRaw = self.ToSignedInt(self.gyRaw)
+		self.gzRaw = self.ToSignedInt(self.gzRaw)
+
+		self.mxRaw = self.ToSignedInt(self.mxRaw)
+		self.myRaw = self.ToSignedInt(self.myRaw)
+		self.mzRaw = self.ToSignedInt(self.mzRaw)
 
 		# check for data read error
 		if buff:
