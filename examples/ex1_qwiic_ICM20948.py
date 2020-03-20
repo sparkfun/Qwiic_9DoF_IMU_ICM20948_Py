@@ -44,29 +44,19 @@ import qwiic_icm20948
 import time
 import sys
 
-#def printRawAGMT():
-	# print("RAW. Acc [ ");
-	# printPaddedInt16b( agmt.acc.axes.x );
-	# print(", ");
-	# printPaddedInt16b( agmt.acc.axes.y );
-	# print(", ");
-	# printPaddedInt16b( agmt.acc.axes.z );
-	# print(" ], Gyr [ ");
-	# printPaddedInt16b( agmt.gyr.axes.x );
-	# print(", ");
-	# printPaddedInt16b( agmt.gyr.axes.y );
-	# print(", ");
-	# printPaddedInt16b( agmt.gyr.axes.z );
-	# print(" ], Mag [ ");
-	# printPaddedInt16b( agmt.mag.axes.x );
-	# print(", ");
-	# printPaddedInt16b( agmt.mag.axes.y );
-	# print(", ");
-	# printPaddedInt16b( agmt.mag.axes.z );
-	# print(" ], Tmp [ ");
-	# printPaddedInt16b( agmt.tmp.val );
-	# print(" ]");
-	# println();
+def printRawAGMT():
+	print('{:+06d}.format(IMU.axRaw)\
+		, '\t', {:+06d}.format(IMU.axRaw)\
+		, '\t', {:+06d}.format(IMU.ayRaw)\
+		, '\t', {:+06d}.format(IMU.azRaw)\
+		, '\t', {:+06d}.format(IMU.gxRaw)\
+		, '\t', {:+06d}.format(IMU.gyRaw)\
+		, '\t', {:+06d}.format(IMU.gzRaw)\
+		, '\t', {:+06d}.format(IMU.mxRaw)\
+		, '\t', {:+06d}.format(IMU.myRaw)\
+		, '\t', {:+06d}.format(IMU.mzRaw)\
+		)
+
 
 
 def runExample():
@@ -84,8 +74,8 @@ def runExample():
 	while True:
 		if IMU.dataReady():
 			IMU.getAgmt() # read all axis from sensor, note this also updates all instance variables
-			print(IMU.axRaw, IMU.ayRaw, IMU.azRaw, IMU.gxRaw, IMU.gyRaw, IMU.gzRaw, IMU.mxRaw, IMU.myRaw, IMU.mzRaw, IMU.tmpRaw, IMU.magStat1, IMU.magStat2)
-    		#printRawAGMT( IMU.agmt );     # Uncomment this to see the raw values, taken directly from the agmt structure
+			#print(IMU.axRaw, IMU.ayRaw, IMU.azRaw, IMU.gxRaw, IMU.gyRaw, IMU.gzRaw, IMU.mxRaw, IMU.myRaw, IMU.mzRaw, IMU.tmpRaw, IMU.magStat1, IMU.magStat2)
+    		printRawAGMT();     # Uncomment this to see the raw values
     		#printScaledAGMT( IMU.agmt);   # This function takes into account the sclae settings from when the measurement was made to calculate the values with units
 			time.sleep(0.03)
 		else:
