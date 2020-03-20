@@ -658,14 +658,30 @@ class QwiicIcm20948(object):
 			return False
 
 	# ----------------------------------
+	# ToSignedInt()
+	#
+	# Takes an input data of 16 bits, and returns the signed 32 bit int version of this data
+	def ToSignedInt(self, input):
+		""" 
+			Takes an input data of 16 bits, and returns the signed 32 bit int version of this data
+
+			:return: Signed 32 bit integer
+			:rtype: int
+
+		"""
+        if input > 32767:
+            input -= 65536
+		return input
+
+	# ----------------------------------
 	# getAgmt()
 	#
-	# Returns a tuple of raw values from accel, gyro, mag and temp of the ICM90248 module
+	# Reads and updates raw values from accel, gyro, mag and temp of the ICM90248 module
 	def getAgmt(self):
 		""" 
-			Returns a tuple of raw values from accel, gyro, mag and temp of the ICM90248 module
+			Reads and updates raw values from accel, gyro, mag and temp of the ICM90248 module
 
-			:return: Returns tuple of accel x/y/z, gryo x/y/z, mag x/y/z, and temp, otherwise False.
+			:return: Returns True if I2C readBlock was successful, otherwise False.
 			:rtype: bool
 
 		"""
@@ -675,25 +691,29 @@ class QwiicIcm20948(object):
 		self.setBank(0)
 		buff = self._i2c.readBlock(self.address, self.AGB0_REG_ACCEL_XOUT_H, numbytes)
 
-		ax = ((buff[0] << 8) | (buff[1] & 0xFF))
-		ay = ((buff[2] << 8) | (buff[3] & 0xFF))
-		az = ((buff[4] << 8) | (buff[5] & 0xFF))
+		self.axRaw = ((buff[0] << 8) | (buff[1] & 0xFF))
+		self.ayRaw = ((buff[2] << 8) | (buff[3] & 0xFF))
+		self.azRaw = ((buff[4] << 8) | (buff[5] & 0xFF))
 
-		gx = ((buff[6] << 8) | (buff[7] & 0xFF))
-		gy = ((buff[8] << 8) | (buff[9] & 0xFF))
-		gz = ((buff[10] << 8) | (buff[11] & 0xFF))
+		self.gxRaw = ((buff[6] << 8) | (buff[7] & 0xFF))
+		self.gyRaw = ((buff[8] << 8) | (buff[9] & 0xFF))
+		self.gzRaw = ((buff[10] << 8) | (buff[11] & 0xFF))
 
-		tmp = ((buff[12] << 8) | (buff[13] & 0xFF))
+		self.tmpRaw = ((buff[12] << 8) | (buff[13] & 0xFF))
 
-		magStat1 = buff[14]
-		mx = ((buff[16] << 8) | (buff[15] & 0xFF)) # Mag data is read little endian
-		my = ((buff[18] << 8) | (buff[17] & 0xFF))
-		mz = ((buff[20] << 8) | (buff[19] & 0xFF))
-		magStat2 = buff[22]
+		self.magStat1 = buff[14]
+		self.mxRaw = ((buff[16] << 8) | (buff[15] & 0xFF)) # Mag data is read little endian
+		self.myRaw = ((buff[18] << 8) | (buff[17] & 0xFF))
+		self.mzRaw = ((buff[20] << 8) | (buff[19] & 0xFF))
+		self.magStat2 = buff[22]
+
+		# Convert all values to signed (because python treats all ints as 32 bit ints 
+		# and does not see the MSB as the sign of our 16 bit int raw value)
+		self.axRaw = ToSignedInt(self.axRaw)
 
 		# check for data read error
 		if buff:
-			return ax, ay, az, gx, gy, gz, mx, my, mz, tmp, magStat1, magStat2
+			return True
 		else:
 			return False
 

@@ -44,29 +44,49 @@ import qwiic_icm20948
 import time
 import sys
 
+def printRawAGMT():
+	# print("RAW. Acc [ ");
+	# printPaddedInt16b( agmt.acc.axes.x );
+	# print(", ");
+	# printPaddedInt16b( agmt.acc.axes.y );
+	# print(", ");
+	# printPaddedInt16b( agmt.acc.axes.z );
+	# print(" ], Gyr [ ");
+	# printPaddedInt16b( agmt.gyr.axes.x );
+	# print(", ");
+	# printPaddedInt16b( agmt.gyr.axes.y );
+	# print(", ");
+	# printPaddedInt16b( agmt.gyr.axes.z );
+	# print(" ], Mag [ ");
+	# printPaddedInt16b( agmt.mag.axes.x );
+	# print(", ");
+	# printPaddedInt16b( agmt.mag.axes.y );
+	# print(", ");
+	# printPaddedInt16b( agmt.mag.axes.z );
+	# print(" ], Tmp [ ");
+	# printPaddedInt16b( agmt.tmp.val );
+	# print(" ]");
+	# println();
+}
+
 def runExample():
 
 	print("\nSparkFun 9DoF ICM-20948 Sensor  Example 1\n")
-	mySensor = qwiic_icm20948.QwiicIcm20948()
+	IMU = qwiic_icm20948.QwiicIcm20948()
 
-	if mySensor.connected == False:
+	if IMU.connected == False:
 		print("The Qwiic ICM20948 device isn't connected to the system. Please check your connection", \
 			file=sys.stderr)
 		return
 
-	mySensor.begin()
+	IMU.begin()
 
 	while True:
-		print("Test")
-		
-		time.sleep(1)
-
-		if mySensor.dataReady():
-    		#print("data ready...")
-			ax, ay, az, gx, gy, gz, mx, my, mz, tmp, magStat1, magStat2 = mySensor.getAgmt()
-			print(ax, ay, az, gx, gy, gz, mx, my, mz, tmp, magStat1, magStat2)
-    		#printRawAGMT( mySensor.agmt );     # Uncomment this to see the raw values, taken directly from the agmt structure
-    		#printScaledAGMT( mySensor.agmt);   # This function takes into account the sclae settings from when the measurement was made to calculate the values with units
+		if IMU.dataReady():
+			IMU.getAgmt() # read all axis from sensor, note this also updates all instance variables
+			print(IMU.axRaw, IMU.ayRaw, IMU.azRaw, IMU.gxRaw, IMU.gyRaw, IMU.gzRaw, IMU.mxRaw, IMU.myRaw, IMU.mzRAW, IMU.tmpRAW, IMU.magStat1, IMU.magStat2)
+    		#printRawAGMT( IMU.agmt );     # Uncomment this to see the raw values, taken directly from the agmt structure
+    		#printScaledAGMT( IMU.agmt);   # This function takes into account the sclae settings from when the measurement was made to calculate the values with units
 			time.sleep(0.03)
 		else:
 			print("Waiting for data")
