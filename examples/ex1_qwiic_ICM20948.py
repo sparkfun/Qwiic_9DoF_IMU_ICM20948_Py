@@ -44,21 +44,6 @@ import qwiic_icm20948
 import time
 import sys
 
-def printRawAGMT():
-	print('{:+06d}.format(IMU.axRaw)\
-		, '\t', {:+06d}.format(IMU.axRaw)\
-		, '\t', {:+06d}.format(IMU.ayRaw)\
-		, '\t', {:+06d}.format(IMU.azRaw)\
-		, '\t', {:+06d}.format(IMU.gxRaw)\
-		, '\t', {:+06d}.format(IMU.gyRaw)\
-		, '\t', {:+06d}.format(IMU.gzRaw)\
-		, '\t', {:+06d}.format(IMU.mxRaw)\
-		, '\t', {:+06d}.format(IMU.myRaw)\
-		, '\t', {:+06d}.format(IMU.mzRaw)\
-		)
-
-
-
 def runExample():
 
 	print("\nSparkFun 9DoF ICM-20948 Sensor  Example 1\n")
@@ -73,10 +58,19 @@ def runExample():
 
 	while True:
 		if IMU.dataReady():
-			IMU.getAgmt() # read all axis from sensor, note this also updates all instance variables
-			#print(IMU.axRaw, IMU.ayRaw, IMU.azRaw, IMU.gxRaw, IMU.gyRaw, IMU.gzRaw, IMU.mxRaw, IMU.myRaw, IMU.mzRaw, IMU.tmpRaw, IMU.magStat1, IMU.magStat2)
-    		printRawAGMT();     # Uncomment this to see the raw values
-    		#printScaledAGMT( IMU.agmt);   # This function takes into account the sclae settings from when the measurement was made to calculate the values with units
+			IMU.getAgmt() # read all axis and temp from sensor, note this also updates all instance variables
+			print(\
+			 '{: 06d}'.format(IMU.axRaw)\
+			, '\t', '{: 06d}'.format(IMU.ayRaw)\
+			, '\t', '{: 06d}'.format(IMU.azRaw)\
+			, '\t', '{: 06d}'.format(IMU.gxRaw)\
+			, '\t', '{: 06d}'.format(IMU.gyRaw)\
+			, '\t', '{: 06d}'.format(IMU.gzRaw)\
+			, '\t', '{: 06d}'.format(IMU.mxRaw)\
+			, '\t', '{: 06d}'.format(IMU.myRaw)\
+			, '\t', '{: 06d}'.format(IMU.mzRaw)\
+			)
+    			#printScaledAGMT( IMU.agmt);   # This function takes into account the sclae settings from when the measurement was made to calculate the values with units
 			time.sleep(0.03)
 		else:
 			print("Waiting for data")
