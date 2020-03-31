@@ -729,6 +729,128 @@ class QwiicIcm20948(object):
 
 
 	# ----------------------------------
+	# i2cMasterPassthrough()
+	#
+	# Enables or disables I2C Master Passthrough
+	def i2cMasterPassthrough(self, passthrough):
+		""" 
+			Enables or disables I2C Master Passthrough
+
+			:return: Returns true if the setting write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+
+		# Read the AGB0_REG_INT_PIN_CONFIG, store in local variable "register"
+		self.setBank(0)
+		register = self._i2c.readByte(self.address, self.AGB0_REG_INT_PIN_CONFIG)
+
+		# Set/clear the BYPASS_EN bit [1] as needed
+		if passthrough:
+			register |= (1<<1) # set bit
+		else:
+			register &= ~(1<<1) # clear bit
+
+		# Write register
+		self.setBank(0)
+		return self._i2c.writeByte(self.address, self.AGB0_REG_INT_PIN_CONFIG, register)	
+
+	# ----------------------------------
+	# i2cMasterEnable()
+	#
+	# Enables or disables I2C Master
+	def i2cMasterEnable(self, enable):
+		""" 
+			Enables or disables I2C Master
+
+			:return: Returns true if the setting write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		
+		self.i2cMasterPassthrough(False) # Disable BYPASS_EN
+
+		# Setup Master Clock speed as 345.6 kHz, and NSP (aka next slave read) to "stop between reads"
+		# Read the AGB3_REG_I2C_MST_CTRL, store in local variable "register"
+		self.setBank(3)
+		register = self._i2c.readByte(self.address, self.AGB3_REG_I2C_MST_CTRL)
+
+		register &= ~(0x0F) # clear bits for master clock [3:0]
+		register |= (0x07) # set bits for master clock [3:0], 0x07 corresponds to 345.6 kHz, good for up to 400 kHz
+		register |= (1<<4) # set bit [4] for NSR (next slave read). 0 = restart between reads. 1 = stop between reads.
+
+		# Write register
+		self.setBank(3)
+		self._i2c.writeByte(self.address, self.AGB3_REG_I2C_MST_CTRL, register)
+
+		# enable/disable Master I2C
+		# Read the AGB0_REG_USER_CTRL, store in local variable "register"
+		self.setBank(0)
+		register = self._i2c.readByte(self.address, self.AGB0_REG_USER_CTRL)
+
+		# Set/clear the I2C_MST_EN bit [5] as needed
+		if enable:
+			register |= (1<<5) # set bit
+		else:
+			register &= ~(1<<5) # clear bit
+
+		# Write register
+		self.setBank(0)
+		return self._i2c.writeByte(self.address, self.AGB0_REG_USER_CTRL, register)
+
+
+
+	# ----------------------------------
+	# startupMagnetometer()
+	#
+	# Initialize the magnotometer with default values
+	def startupMagnetometer(self):
+		""" 
+			Initialize the magnotometer with default values
+
+			:return: Returns true of the initializtion was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		self.i2cMasterPassthrough(False) #Do not connect the SDA/SCL pins to AUX_DA/AUX_CL
+		self.i2cMasterEnable(True)
+		
+		# After a ICM reset the Mag sensor may stop responding over the I2C master
+		# Reset the Master I2C until it responds
+		tries = 0
+		maxTries = 5
+		while (tries < maxTries):
+			# See if we can read the WhoIAm register correctly
+			if (self.magWhoIAm()):
+				break # WIA matched!
+			self.i2cMasterReset() # Otherwise, reset the master I2C and try again
+			tries++
+
+		if (tries == maxTries):
+			print("Mag ID fail. Tries: %d\n", tries)
+			return False
+
+#     //Set up magnetometer
+#     AK09916_CNTL2_Reg_t reg;
+#     reg.MODE = AK09916_mode_cont_100hz;
+#     retval = writeMag(AK09916_REG_CNTL2, (uint8_t *)&reg);
+#     if (retval != ICM_20948_Stat_Ok)
+#     {
+#         status = retval;
+#         return status;
+#     }
+
+#     retval = i2cMasterConfigureSlave(0, MAG_AK09916_I2C_ADDR, AK09916_REG_ST1, 9, true, true, false, false, false);
+#     if (retval != ICM_20948_Stat_Ok)
+#     {
+#         status = retval;
+#         return status;
+#     }
+
+#     return status;
+# }		
+
+	# ----------------------------------
 	# begin()
 	#
 	# Initialize the system/validate the board. 
@@ -772,20 +894,6 @@ class QwiicIcm20948(object):
 		self.enableDlpfAccel(False)
 		self.enableDlpfGyro(False)
 
-
+		self.startupMagnetometer()
 
 		return True
-	
-
-	# def startupDefault(self)
-	# 	ICM_20948_Status_e retval = ICM_20948_Stat_Ok;
-
-	# 	retval = startupMagnetometer();
-	# 	if (retval != ICM_20948_Stat_Ok)
-	# 	{
-	# 		status = retval;
-	# 		return status;
-	# 	}
-
-	# 	return status;
-	# }
