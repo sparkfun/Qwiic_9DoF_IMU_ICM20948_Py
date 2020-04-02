@@ -827,7 +827,7 @@ class QwiicIcm20948(object):
 
 	# Transact directly with an I2C device, one byte at a time
 	# Used to configure a device before it is setup into a normal 0-3 slave slot
-	def ICM_20948_i2c_master_slv4_txn(addr, reg, data, Rw, send_reg_addr):
+	def ICM_20948_i2c_master_slv4_txn(self, addr, reg, data, Rw, send_reg_addr):
 		# Thanks MikeFair! // https://github.com/kriswiner/MPU9250/issues/86
 
 		if Rw:
@@ -885,21 +885,21 @@ class QwiicIcm20948(object):
 		
 		return True # if we get here, then it was a successful write
 
-	def i2cMasterSingleW(self, addr, reg, data)
-    	data = self.ICM_20948_i2c_master_slv4_txn(addr, reg, data, False, True)
-    	return data
+	def i2cMasterSingleW(self, addr, reg, data):
+		data1 = self.ICM_20948_i2c_master_slv4_txn(addr, reg, data, False, True)
+		return data1
 
-	def writeMag(self, reg, data)
-    	data = self.i2cMasterSingleW(MAG_AK09916_I2C_ADDR, reg, data)
-    	return data
+	def writeMag(self, reg, data):
+		data = self.i2cMasterSingleW(MAG_AK09916_I2C_ADDR, reg, data)
+		return data
 
-	def i2cMasterSingleR(self, addr, reg)
-    	data = self.ICM_20948_i2c_master_slv4_txn(addr, reg, 0, True, True)
-    	return data
+	def i2cMasterSingleR(self, addr, reg):
+		data = self.ICM_20948_i2c_master_slv4_txn(addr, reg, 0, True, True)
+		return data
 
-	def readMag(self, reg)
-    	data = self.i2cMasterSingleR(MAG_AK09916_I2C_ADDR, reg)
-    	return data
+	def readMag(self, reg):
+		data = self.i2cMasterSingleR(MAG_AK09916_I2C_ADDR, reg)
+		return data
 
 	# ----------------------------------
 	# magWhoIAm()
@@ -950,7 +950,7 @@ class QwiicIcm20948(object):
 	# ICM_20948_i2c_master_configure_slave()
 	#
 	# Configures Master/slave settings for the ICM20948 as master, and slave in slots 0-3
-	def ICM_20948_i2c_master_configure_slave(self, slave, addr, reg, len, Rw, enable, data_only, grp, swap):
+	def i2cMasterConfigureSlave(self, slave, addr, reg, len, Rw, enable, data_only, grp, swap):
 		""" 
 			Configures Master/slave settings for the ICM20948 as master, and slave in slots 0-3
 
@@ -963,21 +963,21 @@ class QwiicIcm20948(object):
 		slv_reg_reg = 0x00
 		slv_ctrl_reg = 0x00
 		if slave == 0:
-			slv_addr_reg = AGB3_REG_I2C_SLV0_ADDR
-			slv_reg_reg = AGB3_REG_I2C_SLV0_REG
-			slv_ctrl_reg = AGB3_REG_I2C_SLV0_CTRL
+			slv_addr_reg = self.AGB3_REG_I2C_SLV0_ADDR
+			slv_reg_reg = self.AGB3_REG_I2C_SLV0_REG
+			slv_ctrl_reg = self.AGB3_REG_I2C_SLV0_CTRL
 		elif slave == 1:
-			slv_addr_reg = AGB3_REG_I2C_SLV1_ADDR
-			slv_reg_reg = AGB3_REG_I2C_SLV1_REG
-			slv_ctrl_reg = AGB3_REG_I2C_SLV1_CTRL
+			slv_addr_reg = self.AGB3_REG_I2C_SLV1_ADDR
+			slv_reg_reg = self.AGB3_REG_I2C_SLV1_REG
+			slv_ctrl_reg = self.AGB3_REG_I2C_SLV1_CTRL
 		elif slave == 2:
-			slv_addr_reg = AGB3_REG_I2C_SLV2_ADDR
-			slv_reg_reg = AGB3_REG_I2C_SLV2_REG
-			slv_ctrl_reg = AGB3_REG_I2C_SLV2_CTRL
+			slv_addr_reg = self.AGB3_REG_I2C_SLV2_ADDR
+			slv_reg_reg = self.AGB3_REG_I2C_SLV2_REG
+			slv_ctrl_reg = self.AGB3_REG_I2C_SLV2_CTRL
 		elif slave == 3:
-			slv_addr_reg = AGB3_REG_I2C_SLV3_ADDR
-			slv_reg_reg = AGB3_REG_I2C_SLV3_REG
-			slv_ctrl_reg = AGB3_REG_I2C_SLV3_CTRL
+			slv_addr_reg = self.AGB3_REG_I2C_SLV3_ADDR
+			slv_reg_reg = self.AGB3_REG_I2C_SLV3_REG
+			slv_ctrl_reg = self.AGB3_REG_I2C_SLV3_CTRL
 		else:
 			return False
 
@@ -1036,7 +1036,7 @@ class QwiicIcm20948(object):
 		#Set up magnetometer
 		mag_reg_ctrl2 = 0x00
 		mag_reg_ctrl2 |= AK09916_mode_cont_100hz
-		self.writeMag(self.AK09916_REG_CNTL2, mag_reg_ctrl2)
+		self.writeMag(AK09916_REG_CNTL2, mag_reg_ctrl2)
 
 		return self.i2cMasterConfigureSlave(0, MAG_AK09916_I2C_ADDR, AK09916_REG_ST1, 9, True, True, False, False, False)
 
