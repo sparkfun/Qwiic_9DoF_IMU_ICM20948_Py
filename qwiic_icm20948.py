@@ -115,6 +115,33 @@ gyr_d11bw6_n17bw8 = 0x05
 gyr_d5bw7_n8bw9 = 0x06
 gyr_d361bw4_n376bw5 = 0x07
 
+# Magnetometer specific stuff
+MAG_AK09916_I2C_ADDR = 0x0C
+MAG_AK09916_WHO_AM_I = 0x4809
+MAG_REG_WHO_AM_I = 0x00
+AK09916_mode_power_down = 0x00
+AK09916_mode_single 	= (0x01 << 0)
+AK09916_mode_cont_10hz 	= (0x01 << 1)
+AK09916_mode_cont_20hz 	= (0x02 << 1)
+AK09916_mode_cont_50hz 	= (0x03 << 1)
+AK09916_mode_cont_100hz = (0x04 << 1)
+AK09916_mode_self_test 	= (0x01 << 4)
+
+#Magnetometer Registers (aka sub-addresses when reading as I2C Master)
+AK09916_REG_WIA1 = 0x00
+AK09916_REG_WIA2 = 0x01
+AK09916_REG_ST1 = 0x10
+AK09916_REG_HXL = 0x11
+AK09916_REG_HXH = 0x12
+AK09916_REG_HYL = 0x13
+AK09916_REG_HYH = 0x14
+AK09916_REG_HZL = 0x15
+AK09916_REG_HZH = 0x16
+AK09916_REG_ST2 = 0x18
+AK09916_REG_CNTL2 = 0x31
+AK09916_REG_CNTL3 = 0x32
+
+
 # define the class that encapsulates the device being created. All information associated with this
 # device is encapsulated by this class. The device class should be the only value exported 
 # from this module.
@@ -798,7 +825,183 @@ class QwiicIcm20948(object):
 		self.setBank(0)
 		return self._i2c.writeByte(self.address, self.AGB0_REG_USER_CTRL, register)
 
+	# Transact directly with an I2C device, one byte at a time
+	# Used to configure a device before it is setup into a normal 0-3 slave slot
+	def ICM_20948_i2c_master_slv4_txn(addr, reg, data, Rw, send_reg_addr):
+		# Thanks MikeFair! // https://github.com/kriswiner/MPU9250/issues/86
 
+		if Rw:
+			addr |= 0x80
+
+		self.setBank(3)
+		self._i2c.writeByte(self.address, self.AGB3_REG_I2C_SLV4_ADDR, addr)
+
+		self.setBank(3)
+		self._i2c.writeByte(self.address, self.AGB3_REG_I2C_SLV4_REG, reg)
+
+		ctrl_register_slv4 = 0x00
+		ctrl_register_slv4 |= (1<<7) # EN bit [7] (set)
+		ctrl_register_slv4 &= ~(1<<6) # INT_EN bit [6] (cleared)
+		ctrl_register_slv4 &= ~(0x0F) # DLY bits [4:0] (cleared = 0)
+		if(send_reg_addr):
+			ctrl_register_slv4 &= ~(1<<5) # REG_DIS bit [5] (cleared)
+		else:
+			ctrl_register_slv4 |= (1<<5) # REG_DIS bit [5] (set)
+
+		txn_failed = False
+
+		if (Rw == False):
+			self.setBank(3)
+			self._i2c.writeByte(self.address, self.AGB3_REG_I2C_SLV4_DO, data)
+
+		# Kick off txn
+		self.setBank(3)
+		self._i2c.writeByte(self.address, self.AGB3_REG_I2C_SLV4_CTRL, ctrl_register_slv4)
+
+		max_cycles = 1000
+		count = 0
+		slave4Done = False
+		while (slave4Done == False):
+			self.setBank(0)
+			i2c_mst_status = self._i2c.readByte(self.address, self.AGB0_REG_I2C_MST_STATUS)
+			if i2c_mst_status & (1<<6): # Check I2C_SLAVE_DONE bit [6]
+				slave4Done = True
+			if  count > max_cycles:
+				slave4Done = True
+			count += 1
+
+		if i2c_mst_status & (1<<4): # Check I2C_SLV4_NACK bit [4]
+			txn_failed = True
+
+		if count > max_cycles:
+			txn_failed = True
+
+		if txn_failed:
+			return False
+
+		if Rw:
+			self.setBank(3)
+			return self._i2c.readByte(self.address, self.AGB3_REG_I2C_SLV4_DI)
+		
+		return True # if we get here, then it was a successful write
+
+	def i2cMasterSingleW(self, addr, reg, data)
+    	data = self.ICM_20948_i2c_master_slv4_txn(addr, reg, data, False, True)
+    	return data
+
+	def writeMag(self, reg, data)
+    	data = self.i2cMasterSingleW(MAG_AK09916_I2C_ADDR, reg, data)
+    	return data
+
+	def i2cMasterSingleR(self, addr, reg)
+    	data = self.ICM_20948_i2c_master_slv4_txn(addr, reg, 0, True, True)
+    	return data
+
+	def readMag(self, reg)
+    	data = self.i2cMasterSingleR(MAG_AK09916_I2C_ADDR, reg)
+    	return data
+
+	# ----------------------------------
+	# magWhoIAm()
+	#
+	# Checks to see that the Magnetometer returns the correct ID value
+	def magWhoIAm(self):
+		""" 
+			Checks to see that the Magnatometer returns the correct ID value
+
+			:return: Returns true if the check was successful, otherwise False.
+			:rtype: bool
+
+		"""
+
+		whoiam1 = self.readMag(AK09916_REG_WIA1)
+		whoiam2 = self.readMag(AK09916_REG_WIA2)
+
+		if ((whoiam1 == (MAG_AK09916_WHO_AM_I >> 8)) and (whoiam2 == (MAG_AK09916_WHO_AM_I & 0xFF))):
+			return True
+		else:
+			return False
+
+	# ----------------------------------
+	# i2cMasterReset()
+	#
+	# Resets I2C Master Module
+	def i2cMasterReset(self):
+		""" 
+			Resets I2C Master Module
+
+			:return: Returns true if the i2c write was successful, otherwise False.
+			:rtype: bool
+
+		"""
+
+		# Read the AGB0_REG_USER_CTRL, store in local variable "register"
+		self.setBank(0)
+		register = self._i2c.readByte(self.address, self.AGB0_REG_USER_CTRL)
+
+		# Set the I2C_MST_RST bit [1]
+		register |= (1<<1) # set bit
+
+		# Write register
+		self.setBank(0)
+		return self._i2c.writeByte(self.address, self.AGB0_REG_USER_CTRL, register)	
+
+	# ----------------------------------
+	# ICM_20948_i2c_master_configure_slave()
+	#
+	# Configures Master/slave settings for the ICM20948 as master, and slave in slots 0-3
+	def ICM_20948_i2c_master_configure_slave(self, slave, addr, reg, len, Rw, enable, data_only, grp, swap):
+		""" 
+			Configures Master/slave settings for the ICM20948 as master, and slave in slots 0-3
+
+			:return: Returns true if the configuration was successful, otherwise False.
+			:rtype: bool
+
+		"""
+		# Adjust slave address, reg (aka sub-address), and control as needed for each slave slot (0-3)
+		slv_addr_reg = 0x00
+		slv_reg_reg = 0x00
+		slv_ctrl_reg = 0x00
+		if slave == 0:
+			slv_addr_reg = AGB3_REG_I2C_SLV0_ADDR
+			slv_reg_reg = AGB3_REG_I2C_SLV0_REG
+			slv_ctrl_reg = AGB3_REG_I2C_SLV0_CTRL
+		elif slave == 1:
+			slv_addr_reg = AGB3_REG_I2C_SLV1_ADDR
+			slv_reg_reg = AGB3_REG_I2C_SLV1_REG
+			slv_ctrl_reg = AGB3_REG_I2C_SLV1_CTRL
+		elif slave == 2:
+			slv_addr_reg = AGB3_REG_I2C_SLV2_ADDR
+			slv_reg_reg = AGB3_REG_I2C_SLV2_REG
+			slv_ctrl_reg = AGB3_REG_I2C_SLV2_CTRL
+		elif slave == 3:
+			slv_addr_reg = AGB3_REG_I2C_SLV3_ADDR
+			slv_reg_reg = AGB3_REG_I2C_SLV3_REG
+			slv_ctrl_reg = AGB3_REG_I2C_SLV3_CTRL
+		else:
+			return False
+
+		self.setBank(3)
+
+		# Set the slave address and the Rw flag
+		address = addr
+		if Rw:
+			address |= (1<<7) # set bit# set RNW bit [7]
+		
+		self._i2c.writeByte(self.address, slv_addr_reg, address)
+
+		# Set the slave sub-address (reg)
+		subAddress = reg
+		self._i2c.writeByte(self.address, slv_reg_reg, subAddress)
+
+		# Set up the control info
+		ctrl_reg_slvX = 0x00
+		ctrl_reg_slvX |= len
+		ctrl_reg_slvX |= (enable << 7)
+		ctrl_reg_slvX |= (swap << 6)
+		ctrl_reg_slvX |= (data_only << 5)
+		ctrl_reg_slvX |= (grp << 4)
+		return self._i2c.writeByte(self.address, slv_ctrl_reg, ctrl_reg_slvX)
 
 	# ----------------------------------
 	# startupMagnetometer()
@@ -824,31 +1027,18 @@ class QwiicIcm20948(object):
 			if (self.magWhoIAm()):
 				break # WIA matched!
 			self.i2cMasterReset() # Otherwise, reset the master I2C and try again
-			tries++
+			tries += 1
 
 		if (tries == maxTries):
 			print("Mag ID fail. Tries: %d\n", tries)
 			return False
 
-#     //Set up magnetometer
-#     AK09916_CNTL2_Reg_t reg;
-#     reg.MODE = AK09916_mode_cont_100hz;
-#     retval = writeMag(AK09916_REG_CNTL2, (uint8_t *)&reg);
-#     if (retval != ICM_20948_Stat_Ok)
-#     {
-#         status = retval;
-#         return status;
-#     }
+		#Set up magnetometer
+		mag_reg_ctrl2 = 0x00
+		mag_reg_ctrl2 |= AK09916_mode_cont_100hz
+		self.writeMag(self.AK09916_REG_CNTL2, mag_reg_ctrl2)
 
-#     retval = i2cMasterConfigureSlave(0, MAG_AK09916_I2C_ADDR, AK09916_REG_ST1, 9, true, true, false, false, false);
-#     if (retval != ICM_20948_Stat_Ok)
-#     {
-#         status = retval;
-#         return status;
-#     }
-
-#     return status;
-# }		
+		return self.i2cMasterConfigureSlave(0, MAG_AK09916_I2C_ADDR, AK09916_REG_ST1, 9, True, True, False, False, False)
 
 	# ----------------------------------
 	# begin()
