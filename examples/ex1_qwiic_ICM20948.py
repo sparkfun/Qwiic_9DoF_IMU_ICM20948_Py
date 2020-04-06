@@ -70,7 +70,6 @@ def runExample():
 			, '\t', '{: 06d}'.format(IMU.myRaw)\
 			, '\t', '{: 06d}'.format(IMU.mzRaw)\
 			)
-    			#printScaledAGMT( IMU.agmt);   # This function takes into account the sclae settings from when the measurement was made to calculate the values with units
 			time.sleep(0.03)
 		else:
 			print("Waiting for data")
