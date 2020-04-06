@@ -52,7 +52,7 @@ This driver package depends on the qwiic I2C driver:
 
 Documentation
 -------------
-The SparkFun qwiic ICM20948 module documentation is hosted at [ReadTheDocs](https://qwiic-icm20948-py.readthedocs.io/en/latest/?)
+The SparkFun qwiic ICM20948 module documentation is hosted at [ReadTheDocs](https://qwiic-9dof-imu-icm20948-py.readthedocs.io//en/latest/?)
 
 Installation
 -------------
