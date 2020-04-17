@@ -10,8 +10,8 @@ Qwiic_9DoF_IMU_ICM20948_Py
 		<img src="https://img.shields.io/pypi/pyversions/sparkfun_qwiic_icm20948.svg" /></a>
 	<a href="https://github.com/sparkfun/Qwiic_9DoF_IMU_ICM20948_Py/issues" alt="Issues">
 		<img src="https://img.shields.io/github/issues/sparkfun/Qwiic_9DoF_IMU_ICM20948_Py.svg" /></a>
-	<a href="https://qwiic-icm20948-py.readthedocs.io/en/latest/?" alt="Documentation">
-		<img src="https://readthedocs.org/projects/qwiic-icm20948-py/badge/?version=latest&style=flat" /></a>
+	<a href="https://qwiic-9dof-imu-icm20948-py.readthedocs.io/en/latest/?" alt="Documentation">
+		<img src="https://readthedocs.org/projects/qwiic-9dof-imu-icm20948-py/badge/?version=latest&style=flat" /></a>
 	<a href="https://github.com/sparkfun/Qwiic_9DoF_IMU_ICM20948_Py/blob/master/LICENSE" alt="License">
 		<img src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
 	<a href="https://twitter.com/intent/follow?screen_name=sparkfun">
