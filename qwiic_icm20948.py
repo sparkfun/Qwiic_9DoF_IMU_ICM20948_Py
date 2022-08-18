@@ -104,7 +104,7 @@ acc_d11bw5_n17bw = 0x05
 acc_d5bw7_n8bw3 = 0x06
 acc_d473bw_n499bw = 0x07
 
-# Gryo low pass filter configuration options
+# Gyro low pass filter configuration options
 # Format is dAbwB_nXbwZ - A is integer part of 3db BW, B is fraction. X is integer part of nyquist bandwidth, Y is fraction
 gyr_d196bw6_n229bw8 = 0x00
 gyr_d151bw8_n187bw6 = 0x01
@@ -1045,7 +1045,7 @@ class QwiicIcm20948(object):
 		# set sample mode to continuous for both accel and gyro
 		self.setSampleMode((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), ICM_20948_Sample_Mode_Continuous)
 
-		# set full scale range for both accel and gryo (separate functions)
+		# set full scale range for both accel and gyro (separate functions)
 		self.setFullScaleRangeAccel(gpm2)
 		self.setFullScaleRangeGyro(dps250)
 
