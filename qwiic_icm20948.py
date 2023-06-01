@@ -311,6 +311,65 @@ class QwiicIcm20948(object):
 	M_REG_TS1 = 						0x33
 	M_REG_TS2 = 						0x34
 
+	# Read and Clear Interrupt
+	def readAndClearInterrupts(self):
+		# see: https://github.com/wollewald/ICM20948_WE/blob/main/src/ICM20948_WE.cpp, ln 584
+		self.setBank(0)
+		intSource = 0
+		
+		regVal = self._i2c.readByte(self.address, self.AGB0_REG_I2C_MST_STATUS)
+		
+		if(regVal & 0x80):
+			intSource |= 0x01;
+		
+		regVal = self._i2c.readByte(self.address, self.AGB0_REG_INT_STATUS)
+		if(regVal & 0x08):
+			intSource |= 0x02;
+		
+		if(regVal & 0x02):
+			intSource |= 0x04;
+		
+		regVal = self._i2c.readByte(self.address, self.AGB0_REG_INT_STATUS_1)
+		if(regVal & 0x01):
+			intSource |= 0x08;
+		
+		regVal = self._i2c.readByte(self.address, self.AGB0_REG_INT_STATUS_2)
+		if(regVal & 0x01):
+			intSource |= 0x10;
+		
+		regVal = self._i2c.readByte(self.address, self.AGB0_REG_INT_STATUS_3)
+		if(regVal & 0x01):
+			intSource |= 0x20;
+		
+		return intSource
+		
+	def enableWOMInterrupt(self):
+		self.setBank(0)
+		regVal = self._i2c.readByte(self.address, self.AGB0_REG_INT_ENABLE)
+		regVal |= 0x08
+		self._i2c.writeByte(self.address, self.AGB0_REG_INT_ENABLE, regVal)
+		self.setBank(2)
+		regVal = self._i2c.readByte(self.address, self.AGB2_REG_ACCEL_INTEL_CTRL)
+		regVal |= 0x02
+		self._i2c.writeByte(self.address, self.AGB2_REG_ACCEL_INTEL_CTRL, regVal)
+	
+	#set Wake-on-Motion (WOM)
+	def setWakeOnMotionThreshold(self, womThresh, womCompEn):
+		#print("WOM SET")
+		# see: https://github.com/wollewald/ICM20948_WE/blob/main/src/ICM20948_WE.cpp, ln 616
+		self.setBank(2)
+		register = self._i2c.readByte(self.address, self.AGB2_REG_ACCEL_INTEL_CTRL)
+
+		if womCompEn:
+			register |= 0x01 # enable WOM bit
+		else:
+			register &= ~(0x01) # clear WOM bit
+
+
+		self._i2c.writeByte(self.address, self.AGB2_REG_ACCEL_INTEL_CTRL, register)
+		self._i2c.writeByte(self.address, self.AGB2_REG_ACCEL_WOM_THR, womThresh)
+		
+
 	# Constructor
 	def __init__(self, address=None, i2c_driver=None):
 
