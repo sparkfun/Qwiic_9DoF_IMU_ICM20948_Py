@@ -399,7 +399,7 @@ class QwiicIcm20948(object):
 			:rtype: bool
 
 		"""
-		return qwiic_i2c.isDeviceConnected(self.address)
+		return self._i2c.isDeviceConnected(self.address)
 
 	connected = property(isConnected)
 
